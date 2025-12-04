@@ -1,0 +1,44 @@
+#!/bin/bash
+
+#Step 5 - generate depth file.
+#batch run jgi_summarize_bam_contig_depths (calculates the depth of coverage for each contig in a BAM file)
+
+#conda - load MetaBAT2 environment
+module load Anaconda3/2023.07-2
+source activate metabat2_env #make sure to verify metabat2 in env
+
+samples_file=dir.../samples.txt
+
+if [ ! -f "${samples_file}" ]; then
+  echo "Error: ${samples_file} not found!"
+  exit 1
+fi
+
+sample=$(tail -n+${SLURM_ARRAY_TASK_ID} ${samples_file} | head -n 1 | sed 's/.bam$//')
+echo "Sample: (${sample})"
+
+input_bam="dir.../step4_index_sorted_bam/${sample}_alignments.sorted.bam"
+echo "Input BAM path: ${input_bam}"
+
+if [ ! -f "${input_bam}" ]; then
+  echo "Error: Input BAM file does not exist: ${input_bam}"
+  exit 1
+fi
+
+output_dir="dir.../step5_depth"
+mkdir -p "${output_dir}"
+
+output_depth="${output_dir}/${sample}_depth.txt"
+
+#run jgi_summarize_bam_contig_depths
+echo "Running jgi_summarize_bam_contig_depths on: ${input_bam}"
+jgi_summarize_bam_contig_depths --outputDepth "${output_depth}" "${input_bam}"
+
+#check
+if [ $? -ne 0 ]; then
+  echo "Error: jgi_summarize_bam_contig_depths failed for ${input_bam}"
+  exit 1
+fi
+
+echo "jgi_summarize_bam_contig_depths complete for sample: (${sample})"
+echo "Output depth file: ${output_depth}"

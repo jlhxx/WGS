@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#build Bowtie2 indexes for each contigs.fasta file in the specified input directory. 
+#map reads to assemblies 
+
+#Step 1 - Bowtie2
+
+#load Bowtie2 module (HPC)
+module load Bowtie2/2.4.5-GCC-11.3.0
+
+#directory containing contigs.fasta files
+input_dir="dir.../gut_contigs"
+
+#output directory for Bowtie2 indexes - create output directory if it doesn't exist
+output_dir="dir.../output_bowtie"
+mkdir -p "$output_dir"
+
+#loop contigs.fasta - extract sample name from filename & build Bowtie2 index (samples.txt)
+for contigs_file in "$input_dir"/*contigs.fasta; do
+    if [ -f "$contigs_file" ]; then
+        sample_name=$(basename "$contigs_file" _contigs.fasta)
+        bowtie2-build "$contigs_file" "$output_dir/$sample_name"
+        echo "Finished build for Bowtie2 index for $sample_name"
+    fi
+done

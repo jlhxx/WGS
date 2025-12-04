@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#Step 2 alignment - align paired-end reads to a reference genome and output in SAM format.
+
+module load Bowtie2/2.4.5-GCC-11.3.0
+
+#Bowtie2 index files
+index_dir="dir.../step1_bowtie"
+
+#paired-end fastq.gz files
+fastq_dir="dir.../fastp_trimmed"
+
+#output directory for alignment SAM files
+output_dir="dir.../step2_alignments_sam"
+#mkdir -p "$output_dir"
+
+#loop Bowtie2 index - extract sample name from index base name & construct paths to input fastq.gz files
+for index_base in "$index_dir"/*.1.bt2; do
+    if [ -f "$index_base" ]; then
+        sample_name=$(basename "$index_base" .1.bt2 | sed 's/spades_output_//')
+        fastq_R1="$fastq_dir/${sample_name}_R1_001_fastp.fastq.gz"
+        fastq_R2="$fastq_dir/${sample_name}_R2_001_fastp.fastq.gz"
+
+        if [ -f "$fastq_R1" ] && [ -f "$fastq_R2" ]; then
+            bowtie2 -x "$index_dir/spades_output_${sample_name}" -1 "$fastq_R1" -2 "$fastq_R2" -S "$output_dir/${sample_name}_alignments.sam"
+
+            echo "reads completed alignment for $sample_name"
+        else
+            echo "input files missing error for $sample_name"
+        fi
+    fi
+done

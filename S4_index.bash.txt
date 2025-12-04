@@ -1,0 +1,5 @@
+#!/bin/bash
+
+#Step 4 - index bam using samtools index
+module load Bio-SamTools/1.43-intel-2017a-Perl-5.24.1
+samtools index alignments.sorted.bam

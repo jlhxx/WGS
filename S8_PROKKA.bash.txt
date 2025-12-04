@@ -1,0 +1,53 @@
+#!/bin/bash
+
+#Step 8 - batch processing genomic bin files using PROKKA (tool for annotating prokaryotic genomes)
+
+#load prokka (conda environement)
+module load Anaconda3/2023.07-2
+source activate prokka
+
+#paths
+samples_file="dir.../samples.txt" # sample names
+bins_dir="dir.../step6_metabat2"  # bin files
+output_dir="dir.../step8_PROKKA"  # PROKKA output
+
+mkdir -p "${output_dir}"
+
+#check samples_file (i.e. samples.txt containing sample names)
+if [ ! -f "${samples_file}" ]; then
+  echo "Error: ${samples_file} not found!"
+  exit 1
+fi
+
+while IFS= read -r sample; do
+  echo "Processing sample: ${sample}"
+
+  #output directory for PROKKA results
+  sample_output_dir="${output_dir}/${sample}_prokka"
+  mkdir -p "${sample_output_dir}"
+
+  #locate bin files
+  bin_files=$(ls "${bins_dir}/${sample}_mock_bins".*.fa 2>/dev/null)
+
+  if [ -z "${bin_files}" ]; then
+    echo "Error: No bin files found for sample ${sample} in ${bins_dir}"
+    continue
+  fi
+
+  #run PROKKA on every bin
+  for bin_file in ${bin_files}; do
+    echo "Running PROKKA on bin file ${bin_file}"
+    prokka --outdir "${sample_output_dir}" --prefix "$(basename ${bin_file} .fa)" "${bin_file}"
+    
+    #check PROKKA
+    if [ $? -ne 0 ]; then
+      echo "Error: PROKKA failed for bin file ${bin_file}"
+      continue
+    fi
+
+    echo "PROKKA completed for bin ${bin_file}. Results stored ${sample_output_dir}"
+  done
+
+done < "${samples_file}"
+
+echo "All samples completed."

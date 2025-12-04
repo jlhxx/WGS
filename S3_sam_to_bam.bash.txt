@@ -1,0 +1,28 @@
+#!/bin/bash
+
+#Step 3 - convert SAM files to BAM files and sort
+
+#load Bio-SamTools (HPC)
+module load Bio-SamTools/1.43-intel-2017a-Perl-5.24.1
+
+#directories
+sam_dir="dir.../step2_alignments_sam"
+output_dir="dir.../step3_sam_to_bam"
+mkdir -p "$output_dir"
+
+#loop through each SAM file in the sam_dir & run samtools view command to convert SAM to BAM
+
+for sam_file in "$sam_dir"/*.sam; do
+    if [ -f "$sam_file" ]; then
+        # Extract sample name from SAM file name
+        sample_name=$(basename "$sam_file" .sam)
+
+        bam_file="$output_dir/${sample_name}.bam"
+
+        samtools view -bS "$sam_file" > "$bam_file"
+
+        echo "Converted $sam_file to $bam_file"
+    else
+        echo "No SAM files found in $sam_dir"
+    fi
+done
